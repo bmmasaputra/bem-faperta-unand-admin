@@ -1,6 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import App from "./App";
+import Login from "./pages/Login";
+import ProtectedRoute from "./ProtectedRoute";
 import {
   Dashboard,
   Team,
@@ -20,7 +22,18 @@ const AppRouter = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<App />}>
+        {/* PUBLIC ROUTE */}
+        <Route path="/login" element={<Login />} />
+
+        {/* PROTECTED ROUTE */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <App />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/" element={<Dashboard />} />
           <Route path="/team" element={<Team />} />
           <Route path="/contacts" element={<Contacts />} />

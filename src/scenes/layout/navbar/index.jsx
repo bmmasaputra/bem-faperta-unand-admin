@@ -15,8 +15,11 @@ import {
   PersonOutlined,
   SearchOutlined,
   SettingsOutlined,
+  LogoutOutlined,
 } from "@mui/icons-material";
 import { ToggledContext } from "../../../App";
+import { useNavigate } from "react-router-dom";
+
 const Navbar = () => {
   const theme = useTheme();
   const colorMode = useContext(ColorModeContext);
@@ -24,6 +27,13 @@ const Navbar = () => {
   const isMdDevices = useMediaQuery("(max-width:768px)");
   const isXsDevices = useMediaQuery("(max-width:466px)");
   const colors = tokens(theme.palette.mode);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
   return (
     <Box
       display="flex"
@@ -68,6 +78,9 @@ const Navbar = () => {
         </IconButton>
         <IconButton>
           <PersonOutlined />
+        </IconButton>
+        <IconButton onClick={handleLogout}>
+          <LogoutOutlined />
         </IconButton>
       </Box>
     </Box>

@@ -23,7 +23,7 @@ import logo from "../../../assets/images/logo.png";
 import Item from "./Item";
 import { ToggledContext } from "../../../App";
 
-const SideBar = () => {
+const SideBar = (kabinetLogo, admin) => {
   const [collapsed, setCollapsed] = useState(false);
   const { toggled, setToggled } = useContext(ToggledContext);
   const theme = useTheme();
@@ -65,16 +65,16 @@ const SideBar = () => {
                 gap="12px"
                 sx={{ transition: ".3s ease" }}
               >
-                <img
+                {/* <img
                   style={{ width: "30px", height: "30px", borderRadius: "8px" }}
                   src={logo}
                   alt="Argon"
-                />
+                /> */}
                 <Typography
                   variant="h4"
                   fontWeight="bold"
                   textTransform="capitalize"
-                  color={colors.greenAccent[500]}
+                  color={colors.gray[100]}
                 >
                   Dashboard
                 </Typography>
@@ -98,7 +98,7 @@ const SideBar = () => {
         >
           <Avatar
             alt="avatar"
-            src={avatar}
+            src={logo}
             sx={{ width: "100px", height: "100px" }}
           />
           <Box sx={{ textAlign: "center" }}>
