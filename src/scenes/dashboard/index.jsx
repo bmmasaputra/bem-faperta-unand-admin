@@ -5,6 +5,8 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  Modal,
+  TextField,
 } from "@mui/material";
 import {
   Header,
@@ -23,7 +25,7 @@ import {
 } from "@mui/icons-material";
 import { tokens } from "../../theme";
 import { mockTransactions } from "../../data/mockData";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const URL = "https://bemfabe.vercel.app/api/v1";
 
@@ -34,6 +36,14 @@ function Dashboard() {
   const isMdDevices = useMediaQuery("(min-width: 724px)");
   const isXsDevices = useMediaQuery("(max-width: 436px)");
   const [profile, setProfile] = useState(null);
+
+  // Modal state
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({
+    total_mahasiswa: "",
+    total_pengurus: "",
+    jumlah_proker: "",
+  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -48,6 +58,53 @@ function Dashboard() {
 
     fetchProfile();
   }, []);
+
+  // Populate form when modal opens
+  useEffect(() => {
+    if (open && profile) {
+      setForm({
+        total_mahasiswa: profile.total_mahasiswa ?? "",
+        total_pengurus: profile.total_pengurus ?? "",
+        jumlah_proker: profile.jumlah_proker ?? "",
+      });
+    }
+  }, [open, profile]);
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  const handleFormChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    // Example: send PATCH request to update profile
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${URL}/profile/stats`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          total_mahasiswa: Number(form.total_mahasiswa),
+          total_pengurus: Number(form.total_pengurus),
+          jumlah_proker: Number(form.jumlah_proker),
+        }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setProfile(result.data);
+        handleClose();
+      } else {
+        alert(result.message || "Failed to update stats");
+      }
+    } catch (err) {
+      alert("Network error");
+    }
+  };
 
   return (
     <Box m="20px">
@@ -92,62 +149,254 @@ function Dashboard() {
       >
         {/* Statistic Items */}
         <Box
-          gridColumn={isXlDevices ? "span 4" : isMdDevices ? "span 2" : "span 1"}
+          gridColumn={
+            isXlDevices ? "span 4" : isMdDevices ? "span 2" : "span 1"
+          }
           bgcolor={colors.primary[400]}
           display="flex"
           alignItems="center"
           justifyContent="center"
+          py={3}
         >
-          <StatBox
-            title={profile?.total_mahasiswa ?? 0}
-            subtitle="Jumlah Mahasiswa"
-            progress="0.75"
-            increase="+14%"
-            icon={
-              <Email
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
-        <Box
-          gridColumn={isXlDevices ? "span 4" : isMdDevices ? "span 2" : "span 1"}
-          bgcolor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title={profile?.total_pengurus ?? 0}
-            subtitle="Total Pengurus"
-            progress="0.50"
-            increase="+21%"
-            icon={
-              <PointOfSale
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
-        <Box
-          gridColumn={isXlDevices ? "span 4" : isMdDevices ? "span 2" : "span 1"}
-          bgcolor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title={profile?.jumlah_proker ?? 0}
-            subtitle="Jumlah Proker"
-            progress="0.30"
-            increase="+5%"
-            icon={
+          {/* Two columns: Left (icon, stat, subtitle), Right (button) */}
+          <Box
+            display="flex"
+            flexDirection="row"
+            alignItems="stretch"
+            width="100%"
+            px={4}
+            gap={2}
+          >
+            {/* Left: Icon, Stat, Subtitle (all left aligned, stacked vertically) */}
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="flex-start"
+              justifyContent="center"
+              flex={1}
+            >
               <PersonAdd
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
+                sx={{ color: colors.greenAccent[600], fontSize: "32px" }}
               />
-            }
-          />
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                color={colors.gray[100]}
+                sx={{ mt: 1 }}
+              >
+                {profile?.total_mahasiswa ?? 0}
+              </Typography>
+              <Typography variant="subtitle1" color={colors.gray[100]}>
+                Jumlah Mahasiswa
+              </Typography>
+            </Box>
+            {/* Right: Button (full height) */}
+            <Box display="flex" alignItems="center">
+              <Button
+                variant="contained" // changed from "outlined" to "contained"
+                size="small"
+                onClick={handleOpen}
+                sx={{
+                  minWidth: 90,
+                  height: "50%",
+                  bgcolor: colors.blueAccent[700],
+                  color: "#fcfcfc",
+                  boxShadow: "none",
+                  ":hover": {
+                    bgcolor: colors.blueAccent[800],
+                  },
+                }}
+              >
+                Change
+              </Button>
+            </Box>
+          </Box>
         </Box>
+
+        <Box
+          gridColumn={
+            isXlDevices ? "span 4" : isMdDevices ? "span 2" : "span 1"
+          }
+          bgcolor={colors.primary[400]}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          py={3}
+        >
+          <Box
+            display="flex"
+            flexDirection="row"
+            alignItems="stretch"
+            width="100%"
+            px={4}
+            gap={2}
+          >
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="flex-start"
+              justifyContent="center"
+              flex={1}
+            >
+              <PointOfSale
+                sx={{ color: colors.greenAccent[600], fontSize: "32px" }}
+              />
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                color={colors.gray[100]}
+                sx={{ mt: 1 }}
+              >
+                {profile?.total_pengurus ?? 0}
+              </Typography>
+              <Typography variant="subtitle1" color={colors.gray[100]}>
+                Total Pengurus
+              </Typography>
+            </Box>
+            <Box display="flex" alignItems="center">
+              <Button
+                variant="contained" // changed from "outlined" to "contained"
+                size="small"
+                onClick={handleOpen}
+                sx={{
+                  minWidth: 90,
+                  height: "50%",
+                  bgcolor: colors.blueAccent[700],
+                  color: "#fcfcfc",
+                  boxShadow: "none",
+                  ":hover": {
+                    bgcolor: colors.blueAccent[800],
+                  },
+                }}
+              >
+                Change
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+
+        <Box
+          gridColumn={
+            isXlDevices ? "span 4" : isMdDevices ? "span 2" : "span 1"
+          }
+          bgcolor={colors.primary[400]}
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          py={3}
+        >
+          <Box
+            display="flex"
+            flexDirection="row"
+            alignItems="stretch"
+            width="100%"
+            px={4}
+            gap={2}
+          >
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="flex-start"
+              justifyContent="center"
+              flex={1}
+            >
+              <Email
+                sx={{ color: colors.greenAccent[600], fontSize: "32px" }}
+              />
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                color={colors.gray[100]}
+                sx={{ mt: 1 }}
+              >
+                {profile?.jumlah_proker ?? 0}
+              </Typography>
+              <Typography variant="subtitle1" color={colors.gray[100]}>
+                Jumlah Proker
+              </Typography>
+            </Box>
+            <Box display="flex" alignItems="center">
+              <Button
+                variant="contained" // changed from "outlined" to "contained"
+                size="small"
+                onClick={handleOpen}
+                sx={{
+                  minWidth: 90,
+                  height: "50%",
+                  bgcolor: colors.blueAccent[700],
+                  color: "#fcfcfc",
+                  boxShadow: "none",
+                  ":hover": {
+                    bgcolor: colors.blueAccent[800],
+                  },
+                }}
+              >
+                Change
+              </Button>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Modal for editing stats */}
+        <Modal open={open} onClose={handleClose}>
+          <Box
+            component="form"
+            onSubmit={handleFormSubmit}
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+              minWidth: 300,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <Typography variant="h6" mb={2}>
+              Edit Statistics
+            </Typography>
+            <TextField
+              label="Total Mahasiswa"
+              name="total_mahasiswa"
+              type="number"
+              value={form.total_mahasiswa}
+              onChange={handleFormChange}
+              required
+              fullWidth
+            />
+            <TextField
+              label="Total Pengurus"
+              name="total_pengurus"
+              type="number"
+              value={form.total_pengurus}
+              onChange={handleFormChange}
+              required
+              fullWidth
+            />
+            <TextField
+              label="Jumlah Proker"
+              name="jumlah_proker"
+              type="number"
+              value={form.jumlah_proker}
+              onChange={handleFormChange}
+              required
+              fullWidth
+            />
+            <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+              <Button onClick={handleClose} color="secondary">
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" color="primary">
+                Save
+              </Button>
+            </Box>
+          </Box>
+        </Modal>
 
         {/* ---------------- Row 2 ---------------- */}
 
