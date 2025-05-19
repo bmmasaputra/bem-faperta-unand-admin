@@ -23,7 +23,7 @@ import logo from "../../../assets/images/logo.png";
 import Item from "./Item";
 import { ToggledContext } from "../../../App";
 
-const SideBar = (kabinetLogo, admin) => {
+const SideBar = (kabinetLogo) => {
   const [collapsed, setCollapsed] = useState(false);
   const { toggled, setToggled } = useContext(ToggledContext);
   const theme = useTheme();
@@ -103,7 +103,7 @@ const SideBar = (kabinetLogo, admin) => {
           />
           <Box sx={{ textAlign: "center" }}>
             <Typography variant="h3" fontWeight="bold" color={colors.gray[100]}>
-              Admin
+              {localStorage.getItem("admin")}
             </Typography>
             <Typography
               variant="h6"
@@ -129,7 +129,7 @@ const SideBar = (kabinetLogo, admin) => {
           }}
         >
           <Item
-            title="Dashboard"
+            title="Web Profile"
             path="/"
             colors={colors}
             icon={<DashboardOutlined />}

@@ -23,6 +23,9 @@ import {
 } from "@mui/icons-material";
 import { tokens } from "../../theme";
 import { mockTransactions } from "../../data/mockData";
+import { useEffect, useState } from "react";
+
+const URL = "https://bemfabe.vercel.app/api/v1";
 
 function Dashboard() {
   const theme = useTheme();
@@ -30,6 +33,22 @@ function Dashboard() {
   const isXlDevices = useMediaQuery("(min-width: 1260px)");
   const isMdDevices = useMediaQuery("(min-width: 724px)");
   const isXsDevices = useMediaQuery("(max-width: 436px)");
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(`${URL}/profile`);
+        const result = await response.json();
+        setProfile(result.data);
+      } catch (error) {
+        console.error("Failed to fetch profile: ", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   return (
     <Box m="20px">
       <Box display="flex" justifyContent="space-between">
@@ -73,15 +92,15 @@ function Dashboard() {
       >
         {/* Statistic Items */}
         <Box
-          gridColumn="span 3"
+          gridColumn={isXlDevices ? "span 4" : isMdDevices ? "span 2" : "span 1"}
           bgcolor={colors.primary[400]}
           display="flex"
           alignItems="center"
           justifyContent="center"
         >
           <StatBox
-            title="11,361"
-            subtitle="Email Sent"
+            title={profile?.total_mahasiswa ?? 0}
+            subtitle="Jumlah Mahasiswa"
             progress="0.75"
             increase="+14%"
             icon={
@@ -92,15 +111,15 @@ function Dashboard() {
           />
         </Box>
         <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
+          gridColumn={isXlDevices ? "span 4" : isMdDevices ? "span 2" : "span 1"}
+          bgcolor={colors.primary[400]}
           display="flex"
           alignItems="center"
           justifyContent="center"
         >
           <StatBox
-            title="431,225"
-            subtitle="Sales Obtained"
+            title={profile?.total_pengurus ?? 0}
+            subtitle="Total Pengurus"
             progress="0.50"
             increase="+21%"
             icon={
@@ -111,38 +130,19 @@ function Dashboard() {
           />
         </Box>
         <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
+          gridColumn={isXlDevices ? "span 4" : isMdDevices ? "span 2" : "span 1"}
+          bgcolor={colors.primary[400]}
           display="flex"
           alignItems="center"
           justifyContent="center"
         >
           <StatBox
-            title="32,441"
-            subtitle="New Clients"
+            title={profile?.jumlah_proker ?? 0}
+            subtitle="Jumlah Proker"
             progress="0.30"
             increase="+5%"
             icon={
               <PersonAdd
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
-        <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title="1,325,134"
-            subtitle="Traffic Received"
-            progress="0.80"
-            increase="+43%"
-            icon={
-              <Traffic
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
               />
             }
