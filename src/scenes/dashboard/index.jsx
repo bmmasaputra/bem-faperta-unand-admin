@@ -7,6 +7,8 @@ import {
   useTheme,
   Modal,
   TextField,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   Header,
@@ -18,6 +20,7 @@ import {
 } from "../../components";
 import {
   DownloadOutlined,
+  EditOutlined,
   Email,
   PersonAdd,
   PointOfSale,
@@ -36,14 +39,26 @@ function Dashboard() {
   const isMdDevices = useMediaQuery("(min-width: 724px)");
   const isXsDevices = useMediaQuery("(max-width: 436px)");
   const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(false); // universal modal loading
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  
 
-  // Modal state
+  // Stats Modal state
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     total_mahasiswa: "",
     total_pengurus: "",
     jumlah_proker: "",
   });
+
+  // Hero Image Modal state
+  const [openImageModal, setOpenImageModal] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imageError, setImageError] = useState("");
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -79,7 +94,7 @@ function Dashboard() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    // Example: send PATCH request to update profile
+    setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${URL}/profile/stats`, {
@@ -97,12 +112,93 @@ function Dashboard() {
       const result = await response.json();
       if (response.ok) {
         setProfile(result.data);
+        setSnackbar({
+          open: true,
+          message: "Statistics updated successfully!",
+          severity: "success",
+        });
         handleClose();
       } else {
-        alert(result.message || "Failed to update stats");
+        setSnackbar({
+          open: true,
+          message: result.message || "Failed to update stats",
+          severity: "error",
+        });
       }
     } catch (err) {
-      alert("Network error");
+      setSnackbar({ open: true, message: "Network error", severity: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenImageModal = () => {
+    setImageError("");
+    setImageFile(null);
+    setOpenImageModal(true);
+  };
+  const handleCloseImageModal = () => {
+    setOpenImageModal(false);
+    setImageFile(null);
+    setImageError("");
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/jpg"].includes(file.type)) {
+      setImageError("File must be a JPG/JPEG image.");
+      setImageFile(null);
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setImageError("File size must be less than 2MB.");
+      setImageFile(null);
+      return;
+    }
+    setImageFile(file);
+    setImageError("");
+  };
+
+  const handleImageSubmit = async (e) => {
+    e.preventDefault();
+    if (!imageFile) {
+      setImageError("Please select a valid image.");
+      return;
+    }
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("hero", imageFile);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${URL}/profile/hero`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setSnackbar({
+          open: true,
+          message: "Image uploaded successfully!",
+          severity: "success",
+        });
+        handleCloseImageModal();
+      } else {
+        setImageError(result.message || "Failed to upload image.");
+        setSnackbar({
+          open: true,
+          message: result.message || "Failed to upload image.",
+          severity: "error",
+        });
+      }
+    } catch (err) {
+      setImageError("Network error.");
+      setSnackbar({ open: true, message: "Network error.", severity: "error" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -391,8 +487,13 @@ function Dashboard() {
               <Button onClick={handleClose} color="secondary">
                 Cancel
               </Button>
-              <Button type="submit" variant="contained" color="primary">
-                Save
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Save"}
               </Button>
             </Box>
           </Box>
@@ -420,26 +521,142 @@ function Dashboard() {
                 fontWeight="600"
                 color={colors.gray[100]}
               >
-                Revenue Generated
+                Hero Image
               </Typography>
-              <Typography
+              {/* <Typography
                 variant="h5"
                 fontWeight="bold"
                 color={colors.greenAccent[500]}
               >
                 $59,342.32
-              </Typography>
+              </Typography> */}
             </Box>
-            <IconButton>
-              <DownloadOutlined
+            <IconButton onClick={handleOpenImageModal}>
+              <EditOutlined
                 sx={{ fontSize: "26px", color: colors.greenAccent[500] }}
               />
             </IconButton>
           </Box>
-          <Box height="250px" mt="-20px">
-            <LineChart isDashboard={true} />
+          <Box
+            height="210px"
+            mt="0px"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            // sx={{ background: colors.primary[500], borderRadius: 2 }}
+          >
+            {profile?.hero_img_url ? (
+              <img
+                src={
+                  profile?.hero_img_url
+                    ? `${profile.hero_img_url}?t=${Date.now()}`
+                    : ""
+                }
+                alt="Dashboard Visual"
+                style={{
+                  maxHeight: "100%",
+                  maxWidth: "100%",
+                  objectFit: "cover",
+                  borderRadius: 8,
+                }}
+              />
+            ) : (
+              <Typography color={colors.gray[200]}>
+                No image available
+              </Typography>
+            )}
           </Box>
         </Box>
+
+        {/* Modal for editing hero image */}
+        <Modal open={openImageModal} onClose={handleCloseImageModal}>
+          <Box
+            component="form"
+            onSubmit={handleImageSubmit}
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+              minWidth: 320,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <Typography variant="h6" mb={1}>
+              Update Hero Image
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              Please upload a <b>landscape</b> JPG/JPEG image (max 2MB).
+            </Typography>
+            <Button
+              variant="outlined"
+              component="label"
+              sx={{
+                color: colors.gray[100], // Make button text color same as font
+                borderColor: colors.gray[100], // Optional: make border match text
+                fontWeight: "bold",
+                ":hover": {
+                  borderColor: colors.gray[100],
+                  background: colors.primary[600], // Optional: subtle hover effect
+                },
+                mb: 1,
+              }}
+            >
+              Choose Image
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg"
+                hidden
+                onChange={handleImageChange}
+              />
+            </Button>
+            {imageFile && (
+              <Typography variant="body2" color="text.secondary">
+                Selected: {imageFile.name}
+              </Typography>
+            )}
+            {imageError && (
+              <Typography color="error" variant="body2">
+                {imageError}
+              </Typography>
+            )}
+            <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+              <Button onClick={handleCloseImageModal} color="secondary">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+              >
+                {loading ? "Uploading..." : "Upload"}
+              </Button>
+            </Box>
+          </Box>
+        </Modal>
+
+        {/* Snackbar for feedback */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={3000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
 
         {/* Transaction Data */}
         <Box
