@@ -9,6 +9,10 @@ import {
   TextField,
   Snackbar,
   Alert,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import {
   Header,
@@ -45,9 +49,11 @@ function Dashboard() {
     message: "",
     severity: "success",
   });
-  
+  const [openKabinetModal, setOpenKabinetModal] = useState(false);
+  const [kabinetList, setKabinetList] = useState([]);
+  const [selectedKabinet, setSelectedKabinet] = useState("");
 
-  // Stats Modal state
+  // Stats Modal states
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     total_mahasiswa: "",
@@ -55,10 +61,18 @@ function Dashboard() {
     jumlah_proker: "",
   });
 
-  // Hero Image Modal state
+  // Hero Image Modal states
   const [openImageModal, setOpenImageModal] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imageError, setImageError] = useState("");
+
+  // Gubernur and Wagub Image Modal states
+  const [openGubModal, setOpenGubModal] = useState(false);
+  const [openWagubModal, setOpenWagubModal] = useState(false);
+  const [gubFile, setGubFile] = useState(null);
+  const [wagubFile, setWagubFile] = useState(null);
+  const [gubError, setGubError] = useState("");
+  const [wagubError, setWagubError] = useState("");
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -196,6 +210,207 @@ function Dashboard() {
       }
     } catch (err) {
       setImageError("Network error.");
+      setSnackbar({ open: true, message: "Network error.", severity: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenKabinetModal = async () => {
+    setLoading(true);
+    setOpenKabinetModal(true);
+    try {
+      const response = await fetch(`${URL}/kabinet`);
+      const result = await response.json();
+      setKabinetList(result.data || []);
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: "Failed to fetch kabinet list",
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseKabinetModal = () => {
+    setOpenKabinetModal(false);
+    setSelectedKabinet("");
+  };
+
+  const handleChangeKabinet = async (e) => {
+    setSelectedKabinet(e.target.value);
+  };
+
+  const handleSubmitKabinet = async (e) => {
+    e.preventDefault();
+    if (!selectedKabinet) return;
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${URL}/profile/active`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ kabinet_aktif_id: selectedKabinet }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setSnackbar({
+          open: true,
+          message: "Kabinet changed successfully!",
+          severity: "success",
+        });
+        handleCloseKabinetModal();
+      } else {
+        setSnackbar({
+          open: true,
+          message: result.message || "Failed to change kabinet",
+          severity: "error",
+        });
+      }
+    } catch (err) {
+      setSnackbar({ open: true, message: "Network error", severity: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler untuk Gubernur
+  const handleOpenGubModal = () => {
+    setGubError("");
+    setGubFile(null);
+    setOpenGubModal(true);
+  };
+  const handleCloseGubModal = () => {
+    setOpenGubModal(false);
+    setGubFile(null);
+    setGubError("");
+  };
+  const handleGubChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/jpg"].includes(file.type)) {
+      setGubError("File must be a JPG/JPEG image.");
+      setGubFile(null);
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setGubError("File size must be less than 2MB.");
+      setGubFile(null);
+      return;
+    }
+    setGubFile(file);
+    setGubError("");
+  };
+  const handleGubSubmit = async (e) => {
+    e.preventDefault();
+    if (!gubFile) {
+      setGubError("Please select a valid image.");
+      return;
+    }
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("gub", gubFile);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${URL}/profile/gub`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setSnackbar({
+          open: true,
+          message: "Gubernur image uploaded successfully!",
+          severity: "success",
+        });
+        handleCloseGubModal();
+      } else {
+        setGubError(result.message || "Failed to upload image.");
+        setSnackbar({
+          open: true,
+          message: result.message || "Failed to upload image.",
+          severity: "error",
+        });
+      }
+    } catch (err) {
+      setGubError("Network error.");
+      setSnackbar({ open: true, message: "Network error.", severity: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler untuk Wagub
+  const handleOpenWagubModal = () => {
+    setWagubError("");
+    setWagubFile(null);
+    setOpenWagubModal(true);
+  };
+  const handleCloseWagubModal = () => {
+    setOpenWagubModal(false);
+    setWagubFile(null);
+    setWagubError("");
+  };
+  const handleWagubChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/jpg"].includes(file.type)) {
+      setWagubError("File must be a JPG/JPEG image.");
+      setWagubFile(null);
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setWagubError("File size must be less than 2MB.");
+      setWagubFile(null);
+      return;
+    }
+    setWagubFile(file);
+    setWagubError("");
+  };
+  const handleWagubSubmit = async (e) => {
+    e.preventDefault();
+    if (!wagubFile) {
+      setWagubError("Please select a valid image.");
+      return;
+    }
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("wagub", wagubFile);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${URL}/profile/wagub`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setSnackbar({
+          open: true,
+          message: "Wagub image uploaded successfully!",
+          severity: "success",
+        });
+        handleCloseWagubModal();
+      } else {
+        setWagubError(result.message || "Failed to upload image.");
+        setSnackbar({
+          open: true,
+          message: result.message || "Failed to upload image.",
+          severity: "error",
+        });
+      }
+    } catch (err) {
+      setWagubError("Network error.");
       setSnackbar({ open: true, message: "Network error.", severity: "error" });
     } finally {
       setLoading(false);
@@ -501,7 +716,7 @@ function Dashboard() {
 
         {/* ---------------- Row 2 ---------------- */}
 
-        {/* Line Chart */}
+        {/* Hero Image */}
         <Box
           gridColumn={
             isXlDevices ? "span 8" : isMdDevices ? "span 6" : "span 3"
@@ -658,6 +873,381 @@ function Dashboard() {
           </Alert>
         </Snackbar>
 
+        {/* Active Kabinet */}
+        <Box
+          gridColumn={isXlDevices ? "span 4" : "span 3"}
+          gridRow="span 2"
+          backgroundColor={colors.primary[400]}
+          p="30px"
+        >
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            mb={2}
+          >
+            <Typography variant="h5" fontWeight="600">
+              Kabinet Aktif
+            </Typography>
+            <Button
+              variant="contained"
+              sx={{
+                bgcolor: colors.blueAccent[700],
+                color: "#fcfcfc",
+                fontWeight: "bold",
+                minWidth: 90,
+                ":hover": { bgcolor: colors.blueAccent[800] },
+              }}
+              onClick={handleOpenKabinetModal}
+              disabled={loading}
+            >
+              Change
+            </Button>
+          </Box>
+          <Box display="flex" flexDirection="column" alignItems="center">
+            {profile?.kabinet?.logo_url ? (
+              <img
+                src={profile.kabinet.logo_url}
+                alt="Kabinet Logo"
+                style={{
+                  maxHeight: "160px",
+                  objectFit: "cover",
+                  borderRadius: "50%",
+                }}
+              />
+            ) : (
+              <Typography color={colors.gray[200]}>
+                No image available
+              </Typography>
+            )}
+            <Typography
+              variant="h4"
+              fontWeight="600"
+              textAlign="center"
+              sx={{ mt: "10px" }}
+            >
+              {profile?.kabinet?.name
+                ? "Kabinet " + profile.kabinet.name
+                : "No active kabinet"}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Modal for changing kabinet */}
+        <Modal open={openKabinetModal} onClose={handleCloseKabinetModal}>
+          <Box
+            component="form"
+            onSubmit={handleSubmitKabinet}
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+              minWidth: 320,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <Typography variant="h6" mb={2}>
+              Change Active Kabinet
+            </Typography>
+            <FormControl fullWidth>
+              <InputLabel id="kabinet-select-label">Kabinet</InputLabel>
+              <Select
+                labelId="kabinet-select-label"
+                value={selectedKabinet}
+                label="Kabinet"
+                onChange={handleChangeKabinet}
+                required
+              >
+                {kabinetList.map((kabinet) => (
+                  <MenuItem key={kabinet.id} value={kabinet.id}>
+                    {kabinet.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+              <Button
+                onClick={handleCloseKabinetModal}
+                color="secondary"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading || !selectedKabinet}
+              >
+                {loading ? "Saving..." : "Save"}
+              </Button>
+            </Box>
+          </Box>
+        </Modal>
+
+        {/* Gubernur Image */}
+        <Box
+          gridColumn={isXlDevices ? "span 4" : "span 3"}
+          gridRow="span 2"
+          backgroundColor={colors.primary[400]}
+          padding="30px"
+        >
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Typography variant="h5" fontWeight="600" mb="0">
+              Gub Image
+            </Typography>
+            <IconButton onClick={handleOpenGubModal}>
+              <EditOutlined
+                sx={{ fontSize: "26px", color: colors.greenAccent[500] }}
+              />
+            </IconButton>
+          </Box>
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            height="200px"
+          >
+            {profile?.gub_img_url ? (
+              <img
+                src={
+                  profile?.gub_img_url
+                    ? `${profile.gub_img_url}?t=${Date.now()}`
+                    : ""
+                }
+                alt="Gubernur Image"
+                style={{
+                  maxHeight: "100%",
+                  maxWidth: "100%",
+                  objectFit: "cover",
+                  borderRadius: 8,
+                }}
+              />
+            ) : (
+              <Typography color={colors.gray[200]}>
+                No image available
+              </Typography>
+            )}
+          </Box>
+        </Box>
+
+        {/* Wagub Image */}
+        <Box
+          gridColumn={isXlDevices ? "span 4" : "span 3"}
+          gridRow="span 2"
+          backgroundColor={colors.primary[400]}
+          padding="30px"
+        >
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Typography variant="h5" fontWeight="600" mb="0">
+              Wagub Image
+            </Typography>
+            <IconButton onClick={handleOpenWagubModal}>
+              <EditOutlined
+                sx={{ fontSize: "26px", color: colors.greenAccent[500] }}
+              />
+            </IconButton>
+          </Box>
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            height="200px"
+          >
+            {profile?.wagub_img_url ? (
+              <img
+                src={
+                  profile?.wagub_img_url
+                    ? `${profile.wagub_img_url}?t=${Date.now()}`
+                    : ""
+                }
+                alt="Gubernur Image"
+                style={{
+                  maxHeight: "100%",
+                  maxWidth: "100%",
+                  objectFit: "cover",
+                  borderRadius: 8,
+                }}
+              />
+            ) : (
+              <Typography color={colors.gray[200]}>
+                No image available
+              </Typography>
+            )}
+          </Box>
+        </Box>
+
+        {/* Modal for editing Gubernur Image */}
+        <Modal open={openGubModal} onClose={handleCloseGubModal}>
+          <Box
+            component="form"
+            onSubmit={handleGubSubmit}
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+              minWidth: 320,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <Typography variant="h6" mb={1}>
+              Update Gubernur Image
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              Please upload a <b>transparent</b> JPG/JPEG image (max 2MB).
+            </Typography>
+            <Button
+              variant="outlined"
+              component="label"
+              sx={{
+                color: colors.gray[100],
+                borderColor: colors.gray[100],
+                fontWeight: "bold",
+                ":hover": {
+                  borderColor: colors.gray[100],
+                  background: colors.primary[600],
+                },
+                mb: 1,
+              }}
+            >
+              Choose Image
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg"
+                hidden
+                onChange={handleGubChange}
+              />
+            </Button>
+            {gubFile && (
+              <Typography variant="body2" color="text.secondary">
+                Selected: {gubFile.name}
+              </Typography>
+            )}
+            {gubError && (
+              <Typography color="error" variant="body2">
+                {gubError}
+              </Typography>
+            )}
+            <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+              <Button
+                onClick={handleCloseGubModal}
+                color="secondary"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+              >
+                {loading ? "Uploading..." : "Upload"}
+              </Button>
+            </Box>
+          </Box>
+        </Modal>
+
+        {/* Modal for editing Wagub image */}
+        <Modal open={openWagubModal} onClose={handleCloseWagubModal}>
+          <Box
+            component="form"
+            onSubmit={handleWagubSubmit}
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+              minWidth: 320,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <Typography variant="h6" mb={1}>
+              Update Wagub Image
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              Please upload a <b>transparent</b> JPG/JPEG image (max 2MB).
+            </Typography>
+            <Button
+              variant="outlined"
+              component="label"
+              sx={{
+                color: colors.gray[100],
+                borderColor: colors.gray[100],
+                fontWeight: "bold",
+                ":hover": {
+                  borderColor: colors.gray[100],
+                  background: colors.primary[600],
+                },
+                mb: 1,
+              }}
+            >
+              Choose Image
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg"
+                hidden
+                onChange={handleWagubChange}
+              />
+            </Button>
+            {wagubFile && (
+              <Typography variant="body2" color="text.secondary">
+                Selected: {wagubFile.name}
+              </Typography>
+            )}
+            {wagubError && (
+              <Typography color="error" variant="body2">
+                {wagubError}
+              </Typography>
+            )}
+            <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+              <Button
+                onClick={handleCloseWagubModal}
+                color="secondary"
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+              >
+                {loading ? "Uploading..." : "Upload"}
+              </Button>
+            </Box>
+          </Box>
+        </Modal>
+
         {/* Transaction Data */}
         <Box
           gridColumn={isXlDevices ? "span 4" : "span 3"}
@@ -704,81 +1294,6 @@ function Dashboard() {
               </Box>
             </Box>
           ))}
-        </Box>
-
-        {/* Revenue Details */}
-        <Box
-          gridColumn={isXlDevices ? "span 4" : "span 3"}
-          gridRow="span 2"
-          backgroundColor={colors.primary[400]}
-          p="30px"
-        >
-          <Typography variant="h5" fontWeight="600">
-            Campaign
-          </Typography>
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            mt="25px"
-          >
-            <ProgressCircle size="125" />
-            <Typography
-              textAlign="center"
-              variant="h5"
-              color={colors.greenAccent[500]}
-              sx={{ mt: "15px" }}
-            >
-              $48,352 revenue generated
-            </Typography>
-            <Typography textAlign="center">
-              Includes extra misc expenditures and costs
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Bar Chart */}
-        <Box
-          gridColumn={isXlDevices ? "span 4" : "span 3"}
-          gridRow="span 2"
-          backgroundColor={colors.primary[400]}
-        >
-          <Typography
-            variant="h5"
-            fontWeight="600"
-            sx={{ p: "30px 30px 0 30px" }}
-          >
-            Sales Quantity
-          </Typography>
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            height="250px"
-            mt="-20px"
-          >
-            <BarChart isDashboard={true} />
-          </Box>
-        </Box>
-
-        {/* Geography Chart */}
-        <Box
-          gridColumn={isXlDevices ? "span 4" : "span 3"}
-          gridRow="span 2"
-          backgroundColor={colors.primary[400]}
-          padding="30px"
-        >
-          <Typography variant="h5" fontWeight="600" mb="15px">
-            Geography Based Traffic
-          </Typography>
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            height="200px"
-          >
-            <GeographyChart isDashboard={true} />
-          </Box>
         </Box>
       </Box>
     </Box>
