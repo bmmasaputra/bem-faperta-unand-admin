@@ -74,6 +74,14 @@ function Dashboard() {
   const [gubError, setGubError] = useState("");
   const [wagubError, setWagubError] = useState("");
 
+  // Tambahkan state untuk modal sambutan
+  const [openGubSambutanModal, setOpenGubSambutanModal] = useState(false);
+  const [openWagubSambutanModal, setOpenWagubSambutanModal] = useState(false);
+  const [gubSambutan, setGubSambutan] = useState("");
+  const [wagubSambutan, setWagubSambutan] = useState("");
+  const [gubSambutanError, setGubSambutanError] = useState("");
+  const [wagubSambutanError, setWagubSambutanError] = useState("");
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -87,6 +95,14 @@ function Dashboard() {
 
     fetchProfile();
   }, []);
+
+  // Sync sambutan text from profile
+  useEffect(() => {
+    if (profile) {
+      setGubSambutan(profile?.sambutan_gub ?? "");
+      setWagubSambutan(profile?.sambutan_wagub ?? "");
+    }
+  }, [profile]);
 
   // Populate form when modal opens
   useEffect(() => {
@@ -411,6 +427,108 @@ function Dashboard() {
       }
     } catch (err) {
       setWagubError("Network error.");
+      setSnackbar({ open: true, message: "Network error.", severity: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler for Gub Sambutan
+  const handleOpenGubSambutanModal = () => {
+    setGubSambutanError("");
+    setOpenGubSambutanModal(true);
+  };
+  const handleCloseGubSambutanModal = () => {
+    setOpenGubSambutanModal(false);
+    setGubSambutanError("");
+  };
+  const handleGubSambutanChange = (e) => setGubSambutan(e.target.value);
+  const handleGubSambutanSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${URL}/profile/sambutan`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          sambutan_gub: gubSambutan,
+          sambutan_wagub: wagubSambutan,
+        }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setSnackbar({
+          open: true,
+          message: "Gubernur sambutan updated!",
+          severity: "success",
+        });
+        setProfile((prev) => ({ ...prev, gub_sambutan: gubSambutan }));
+        handleCloseGubSambutanModal();
+      } else {
+        setGubSambutanError(result.message || "Failed to update sambutan.");
+        setSnackbar({
+          open: true,
+          message: result.message || "Failed to update sambutan.",
+          severity: "error",
+        });
+      }
+    } catch {
+      setGubSambutanError("Network error.");
+      setSnackbar({ open: true, message: "Network error.", severity: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handler for Wagub Sambutan
+  const handleOpenWagubSambutanModal = () => {
+    setWagubSambutanError("");
+    setOpenWagubSambutanModal(true);
+  };
+  const handleCloseWagubSambutanModal = () => {
+    setOpenWagubSambutanModal(false);
+    setWagubSambutanError("");
+  };
+  const handleWagubSambutanChange = (e) => setWagubSambutan(e.target.value);
+  const handleWagubSambutanSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${URL}/profile/sambutan`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          sambutan_gub: gubSambutan,
+          sambutan_wagub: wagubSambutan,
+        }),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setSnackbar({
+          open: true,
+          message: "Wagub sambutan updated!",
+          severity: "success",
+        });
+        setProfile((prev) => ({ ...prev, wagub_sambutan: wagubSambutan }));
+        handleCloseWagubSambutanModal();
+      } else {
+        setWagubSambutanError(result.message || "Failed to update sambutan.");
+        setSnackbar({
+          open: true,
+          message: result.message || "Failed to update sambutan.",
+          severity: "error",
+        });
+      }
+    } catch {
+      setWagubSambutanError("Network error.");
       setSnackbar({ open: true, message: "Network error.", severity: "error" });
     } finally {
       setLoading(false);
@@ -997,12 +1115,13 @@ function Dashboard() {
           gridColumn={isXlDevices ? "span 4" : "span 3"}
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
-          padding="30px"
+          padding="20px"
         >
           <Box
             display="flex"
             alignItems="center"
             justifyContent="space-between"
+            mb={1}
           >
             <Typography variant="h5" fontWeight="600" mb="0">
               Gub Image
@@ -1047,12 +1166,13 @@ function Dashboard() {
           gridColumn={isXlDevices ? "span 4" : "span 3"}
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
-          padding="30px"
+          padding="20px"
         >
           <Box
             display="flex"
             alignItems="center"
             justifyContent="space-between"
+            mb={1}
           >
             <Typography variant="h5" fontWeight="600" mb="0">
               Wagub Image
@@ -1248,7 +1368,7 @@ function Dashboard() {
           </Box>
         </Modal>
 
-        {/* Transaction Data */}
+        {/* Sambutan */}
         <Box
           gridColumn={isXlDevices ? "span 4" : "span 3"}
           gridRow="span 2"
@@ -1257,43 +1377,201 @@ function Dashboard() {
         >
           <Box borderBottom={`4px solid ${colors.primary[500]}`} p="15px">
             <Typography color={colors.gray[100]} variant="h5" fontWeight="600">
-              Recent Transactions
+              Sambutan
             </Typography>
           </Box>
 
-          {mockTransactions.map((transaction, index) => (
+          {/* Gub Sambutan */}
+          <Box borderBottom={`4px solid ${colors.primary[500]}`} p="15px">
             <Box
-              key={`${transaction.txId}-${index}`}
               display="flex"
               alignItems="center"
               justifyContent="space-between"
-              borderBottom={`4px solid ${colors.primary[500]}`}
-              p="15px"
             >
-              <Box>
-                <Typography
-                  color={colors.greenAccent[500]}
-                  variant="h5"
-                  fontWeight="600"
-                >
-                  {transaction.txId}
-                </Typography>
-                <Typography color={colors.gray[100]}>
-                  {transaction.user}
-                </Typography>
-              </Box>
-              <Typography color={colors.gray[100]}>
-                {transaction.date}
-              </Typography>
-              <Box
-                bgcolor={colors.greenAccent[500]}
-                p="5px 10px"
-                borderRadius="4px"
+              <Typography
+                color={colors.greenAccent[500]}
+                variant="h5"
+                fontWeight="600"
               >
-                ${transaction.cost}
+                Gubernur
+              </Typography>
+              <Button
+                variant="contained"
+                sx={{
+                  bgcolor: colors.blueAccent[700],
+                  color: "#fcfcfc",
+                  fontWeight: "bold",
+                  minWidth: 90,
+                  ":hover": { bgcolor: colors.blueAccent[800] },
+                }}
+                onClick={handleOpenGubSambutanModal}
+                disabled={loading}
+              >
+                Change
+              </Button>
+            </Box>
+            <Typography
+              color={colors.gray[100]}
+              variant="body2"
+              sx={{ mt: 1, whiteSpace: "pre-line" }}
+            >
+              {profile?.sambutan_gub || "-"}
+            </Typography>
+          </Box>
+
+          {/* Modal for editing Gub Sambutan */}
+          <Modal
+            open={openGubSambutanModal}
+            onClose={handleCloseGubSambutanModal}
+          >
+            <Box
+              component="form"
+              onSubmit={handleGubSambutanSubmit}
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                bgcolor: "background.paper",
+                boxShadow: 24,
+                p: 4,
+                borderRadius: 2,
+                minWidth: 320,
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}
+            >
+              <Typography variant="h6" mb={2}>
+                Edit Gubernur Sambutan
+              </Typography>
+              <TextField
+                label="Sambutan"
+                name="gub_sambutan"
+                value={gubSambutan}
+                onChange={handleGubSambutanChange}
+                required
+                fullWidth
+                multiline
+                minRows={4}
+                error={!!gubSambutanError}
+                helperText={gubSambutanError}
+              />
+              <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+                <Button
+                  onClick={handleCloseGubSambutanModal}
+                  color="secondary"
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : "Save"}
+                </Button>
               </Box>
             </Box>
-          ))}
+          </Modal>
+
+          {/* Wagub Sambutan */}
+          <Box borderBottom={`4px solid ${colors.primary[500]}`} p="15px">
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <Typography
+                color={colors.greenAccent[500]}
+                variant="h5"
+                fontWeight="600"
+              >
+                Wakil Gubernur
+              </Typography>
+              <Button
+                variant="contained"
+                sx={{
+                  bgcolor: colors.blueAccent[700],
+                  color: "#fcfcfc",
+                  fontWeight: "bold",
+                  minWidth: 90,
+                  ":hover": { bgcolor: colors.blueAccent[800] },
+                }}
+                onClick={handleOpenWagubSambutanModal}
+                disabled={loading}
+              >
+                Change
+              </Button>
+            </Box>
+            <Typography
+              color={colors.gray[100]}
+              variant="body2"
+              sx={{ mt: 1, whiteSpace: "pre-line" }}
+            >
+              {profile?.sambutan_wagub || "-"}
+            </Typography>
+          </Box>
+
+          {/* Modal for editing Wagub Sambutan */}
+          <Modal
+            open={openWagubSambutanModal}
+            onClose={handleCloseWagubSambutanModal}
+          >
+            <Box
+              component="form"
+              onSubmit={handleWagubSambutanSubmit}
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                bgcolor: "background.paper",
+                boxShadow: 24,
+                p: 4,
+                borderRadius: 2,
+                minWidth: 320,
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}
+            >
+              <Typography variant="h6" mb={2}>
+                Edit Wagub Sambutan
+              </Typography>
+              <TextField
+                label="Sambutan"
+                name="wagub_sambutan"
+                value={wagubSambutan}
+                onChange={handleWagubSambutanChange}
+                required
+                fullWidth
+                multiline
+                minRows={4}
+                error={!!wagubSambutanError}
+                helperText={wagubSambutanError}
+              />
+              <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+                <Button
+                  onClick={handleCloseWagubSambutanModal}
+                  color="secondary"
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : "Save"}
+                </Button>
+              </Box>
+            </Box>
+          </Modal>
         </Box>
       </Box>
     </Box>
