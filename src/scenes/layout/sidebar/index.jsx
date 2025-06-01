@@ -23,7 +23,7 @@ import logo from "../../../assets/images/logo.png";
 import Item from "./Item";
 import { ToggledContext } from "../../../App";
 
-const SideBar = (kabinetLogo) => {
+const SideBar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { toggled, setToggled } = useContext(ToggledContext);
   const theme = useTheme();
@@ -154,16 +154,16 @@ const SideBar = (kabinetLogo) => {
           }}
         >
           <Item
-            title="Manage Team"
-            path="/team"
-            colors={colors}
-            icon={<PeopleAltOutlined />}
-          />
-          <Item
-            title="Contacts Information"
-            path="/contacts"
+            title="Manage Kabinet"
+            path="/kabinet"
             colors={colors}
             icon={<ContactsOutlined />}
+          />
+          <Item
+            title="Manage Admins"
+            path="/contacts"
+            colors={colors}
+            icon={<PeopleAltOutlined />}
           />
           <Item
             title="Invoices Balances"

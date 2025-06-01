@@ -35,7 +35,7 @@ const AppRouter = () => {
           }
         >
           <Route path="/" element={<Dashboard />} />
-          <Route path="/team" element={<Team />} />
+          <Route path="/kabinet" element={<Team />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/form" element={<Form />} />
