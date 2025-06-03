@@ -160,14 +160,14 @@ const SideBar = () => {
             icon={<ContactsOutlined />}
           />
           <Item
-            title="Manage Admins"
+            title="Manage Pengurus"
             path="/contacts"
             colors={colors}
             icon={<PeopleAltOutlined />}
           />
           <Item
-            title="Invoices Balances"
-            path="/invoices"
+            title="Manage Admins"
+            path="/admins"
             colors={colors}
             icon={<ReceiptOutlined />}
           />
