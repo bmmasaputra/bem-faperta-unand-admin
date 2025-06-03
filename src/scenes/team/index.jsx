@@ -20,6 +20,7 @@ import {
 } from "@mui/icons-material";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
+import CircularProgress from "@mui/material/CircularProgress";
 import React, { useState, useEffect } from "react";
 const URL = "https://bemfabe.vercel.app/api/v1";
 
@@ -29,6 +30,8 @@ const Team = () => {
   const [kabinets, setKabinets] = useState([]);
   const [activeKabinetId, setActiveKabinetId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -51,6 +54,9 @@ const Team = () => {
   // Tambahkan state untuk preview logo dan image
   const [logoPreview, setLogoPreview] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+
+  // Tambahkan state untuk edit
+  const [editKabinet, setEditKabinet] = useState(null);
 
   // Fetch pengurus for dropdown
   useEffect(() => {
@@ -152,6 +158,24 @@ const Team = () => {
     }
   };
 
+  // Reset edit state and form saat cancel/tambah baru
+  useEffect(() => {
+    if (!showAddForm) {
+      setLogoPreview(null);
+      setImagePreview(null);
+      setEditKabinet(null);
+      setForm({
+        name: "",
+        visi: "",
+        misi: ["", "", "", ""],
+        logo: null,
+        image: null,
+        gubernur_id: "",
+        wakil_id: "",
+      });
+    }
+  }, [showAddForm]);
+
   // Handle misi change
   const handleMisiChange = (idx, value) => {
     setForm((prev) => {
@@ -179,22 +203,121 @@ const Team = () => {
     return `<ol>\n  ${items.join("\n  ")}\n</ol>`;
   };
 
-  // Handle submit
-  const handleAddKabinet = async (e) => {
+  const handleDeleteKabinet = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this kabinet?"))
+      return;
+    setDeletingId(id);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${URL}/kabinet`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSnackbar({
+          open: true,
+          message: data.message || "Failed to delete kabinet.",
+          severity: "error",
+        });
+        setDeletingId(null);
+        return;
+      }
+      setSnackbar({
+        open: true,
+        message: "Kabinet deleted successfully!",
+        severity: "success",
+      });
+      reloadKabinetData();
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: "Network error. Failed to delete kabinet.",
+        severity: "error",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  // Saat klik Edit, populate form dan tampilkan form edit
+  const handleEditKabinet = (kabinet) => {
+    setForm({
+      name: kabinet.name || "",
+      visi: kabinet.visi || "",
+      misi: Array.isArray(kabinet.misi)
+        ? kabinet.misi
+        : kabinet.misi
+        ? Array.from(
+            new DOMParser()
+              .parseFromString(kabinet.misi, "text/html")
+              .querySelectorAll("li")
+          ).map((li) => li.textContent)
+        : ["", "", "", ""],
+      logo: null,
+      image: null,
+      gubernur_id:
+        kabinet.gubernur_id || kabinet.pengurus_kabinet_gubernur_id || "",
+      wakil_id: kabinet.wakil_id || kabinet.pengurus_kabinet_wakil_id || "",
+    });
+    setLogoPreview(kabinet.logo_url || null);
+    setImagePreview(kabinet.kabinet_img_url || null);
+    setEditKabinet({
+      ...kabinet,
+      logo_url: kabinet.logo_url || null,
+      image_url: kabinet.kabinet_img_url || null,
+    });
+    setShowAddForm(true);
+  };  
+
+  // Handle save kabinet (add/edit)
+  const handleSaveKabinet = async (e) => {
     e.preventDefault();
+    setSaving(true);
+  
+    // Helper untuk fetch file dari url dan convert ke File
+    async function urlToFile(url, filename) {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      // Ekstensi dari url atau fallback ke jpg/png
+      const ext = url.split(".").pop().split("?")[0];
+      const mime = blob.type || (ext === "png" ? "image/png" : "image/jpeg");
+      return new File([blob], filename, { type: mime });
+    }
+  
     const formData = new FormData();
-    if (form.logo) formData.append("logo", form.logo);
-    if (form.image) formData.append("image", form.image);
+  
+    // Logo
+    if (form.logo) {
+      formData.append("logo", form.logo);
+    } else if (editKabinet && editKabinet.logo_url) {
+      const file = await urlToFile(editKabinet.logo_url, "logo.jpg");
+      formData.append("logo", file);
+    }
+  
+    // Image
+    if (form.image) {
+      formData.append("image", form.image);
+    } else if (editKabinet && editKabinet.image_url) {
+      const file = await urlToFile(editKabinet.image_url, "image.jpg");
+      formData.append("image", file);
+    }
+  
+    if (editKabinet) formData.append("id", editKabinet.id);
     formData.append("name", form.name);
     formData.append("visi", form.visi);
     formData.append("misi", misiToHtml(form.misi));
     formData.append("gubernur_id", form.gubernur_id);
     formData.append("wakil_id", form.wakil_id);
-
+  
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${URL}/kabinet`, {
-        method: "POST",
+        method: editKabinet ? "PUT" : "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
@@ -202,17 +325,21 @@ const Team = () => {
         const errData = await res.json();
         setSnackbar({
           open: true,
-          message: errData.message || "Failed to add kabinet.",
+          message:
+            errData.message ||
+            `Failed to ${editKabinet ? "edit" : "add"} kabinet.`,
           severity: "error",
         });
+        setSaving(false);
         return;
       }
       setSnackbar({
         open: true,
-        message: "Kabinet added successfully!",
+        message: `Kabinet ${editKabinet ? "updated" : "added"} successfully!`,
         severity: "success",
       });
       setShowAddForm(false);
+      setEditKabinet(null);
       setForm({
         name: "",
         visi: "",
@@ -222,15 +349,53 @@ const Team = () => {
         gubernur_id: "",
         wakil_id: "",
       });
+      reloadKabinetData();
     } catch (err) {
       setSnackbar({
         open: true,
-        message: "Network error. Failed to add kabinet.",
+        message: `Network error. Failed to ${
+          editKabinet ? "edit" : "add"
+        } kabinet.`,
         severity: "error",
       });
+    } finally {
+      setSaving(false);
     }
   };
 
+  // Reset edit state saat cancel/tambah baru
+  useEffect(() => {
+    if (!showAddForm) {
+      setLogoPreview(null);
+      setImagePreview(null);
+      setEditKabinet(null);
+    }
+  }, [showAddForm]);
+
+  // Helper to reload kabinet data
+  const reloadKabinetData = async () => {
+    setLoading(true);
+    try {
+      const kabinetRes = await fetch(`${URL}/kabinet`, {
+        headers: { "Content-Type": "application/json" },
+      });
+      const kabinetData = await kabinetRes.json();
+      setKabinets(kabinetData.data);
+
+      const profileRes = await fetch(`${URL}/profile`, {
+        headers: { "Content-Type": "application/json" },
+      });
+      const profileData = await profileRes.json();
+      const activeId = profileData.data?.kabinet?.id;
+      setActiveKabinetId(activeId);
+    } catch (error) {
+      setKabinets([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Define columns for DataGrid
   const columns = [
     {
       field: "index",
@@ -325,9 +490,7 @@ const Team = () => {
             size="small"
             startIcon={<EditOutlined />}
             sx={{ minWidth: 70, fontWeight: 600, textTransform: "none" }}
-            onClick={() => {
-              /* handle edit */
-            }}
+            onClick={() => handleEditKabinet(params.row)}
           >
             Edit
           </Button>
@@ -335,14 +498,20 @@ const Team = () => {
             variant="contained"
             color="error"
             size="small"
-            startIcon={<DeleteOutline />}
+            startIcon={
+              deletingId === params.row.id ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <DeleteOutline />
+              )
+            }
             sx={{ minWidth: 70, fontWeight: 600, textTransform: "none" }}
-            onClick={() => {
-              /* handle delete */
-            }}
-            disabled={params.row.id === activeKabinetId}
+            onClick={() => handleDeleteKabinet(params.row.id)}
+            disabled={
+              params.row.id === activeKabinetId || deletingId === params.row.id
+            }
           >
-            Delete
+            {deletingId === params.row.id ? "Deleting..." : "Delete"}
           </Button>
         </Box>
       ),
@@ -360,7 +529,7 @@ const Team = () => {
         mb={2}
       >
         <Header
-          title="All Kabinets"
+          title="Kabinets"
           subtitle="Managing all existing kabinets"
         />
         {!showAddForm && (
@@ -373,7 +542,21 @@ const Team = () => {
               fontWeight: 600,
               ":hover": { bgcolor: colors.blueAccent[800] },
             }}
-            onClick={() => setShowAddForm(true)}
+            onClick={() => {
+              setEditKabinet(null);
+              setForm({
+                name: "",
+                visi: "",
+                misi: ["", "", "", ""],
+                logo: null,
+                image: null,
+                gubernur_id: "",
+                wakil_id: "",
+              });
+              setLogoPreview(null);
+              setImagePreview(null);
+              setShowAddForm(true);
+            }}
           >
             Add New Kabinet
           </Button>
@@ -383,7 +566,7 @@ const Team = () => {
       {showAddForm ? (
         <Box
           component="form"
-          onSubmit={handleAddKabinet}
+          onSubmit={handleSaveKabinet}
           bgcolor={colors.primary[400]}
           p={4}
           borderRadius={2}
@@ -554,8 +737,12 @@ const Team = () => {
                 variant="contained"
                 color="primary"
                 fullWidth
+                disabled={saving}
+                startIcon={
+                  saving ? <CircularProgress size={18} color="inherit" /> : null
+                }
               >
-                Save
+                {saving ? "Saving..." : editKabinet ? "Save Changes" : "Save"}
               </Button>
             </Box>
           </Box>
@@ -589,9 +776,15 @@ const Team = () => {
               mb={2}
               bgcolor={colors.primary[600]}
             >
-              {form.logo ? (
+              {logoPreview ? (
                 <img
                   src={logoPreview}
+                  alt="Logo Preview"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : editKabinet && editKabinet.logo_url ? (
+                <img
+                  src={editKabinet.logo_url}
                   alt="Logo Preview"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
@@ -638,9 +831,15 @@ const Team = () => {
               mb={2}
               bgcolor={colors.primary[600]}
             >
-              {form.image ? (
+              {imagePreview ? (
                 <img
                   src={imagePreview}
+                  alt="Image Preview"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              ) : editKabinet && editKabinet.image_url ? (
+                <img
+                  src={editKabinet.image_url}
                   alt="Image Preview"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
