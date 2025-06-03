@@ -528,10 +528,7 @@ const Team = () => {
         alignItems="center"
         mb={2}
       >
-        <Header
-          title="Kabinets"
-          subtitle="Managing all existing kabinets"
-        />
+        <Header title="Kabinets" subtitle="Managing all existing kabinets" />
         {!showAddForm && (
           <Button
             variant="contained"
@@ -766,14 +763,14 @@ const Team = () => {
             </Typography>
             <Box
               width={120}
-              height={120}
+              height={130}
               display="flex"
               alignItems="center"
               justifyContent="center"
               border={`2px dashed ${colors.gray[300]}`}
-              borderRadius="50%"
+              borderRadius="10%"
               overflow="hidden"
-              mb={2}
+              mb={1}
               bgcolor={colors.primary[600]}
             >
               {logoPreview ? (
@@ -784,7 +781,7 @@ const Team = () => {
                 />
               ) : editKabinet && editKabinet.logo_url ? (
                 <img
-                  src={editKabinet.logo_url}
+                  src={`${editKabinet.logo_url}?cb=${Date.now()}`}
                   alt="Logo Preview"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
@@ -828,7 +825,7 @@ const Team = () => {
               border={`2px dashed ${colors.gray[300]}`}
               borderRadius={2}
               overflow="hidden"
-              mb={2}
+              mb={1}
               bgcolor={colors.primary[600]}
             >
               {imagePreview ? (
@@ -839,7 +836,7 @@ const Team = () => {
                 />
               ) : editKabinet && editKabinet.image_url ? (
                 <img
-                  src={editKabinet.image_url}
+                  src={`${editKabinet.image_url}?cb=${Date.now()}`}
                   alt="Image Preview"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
