@@ -16,7 +16,8 @@ import {
   Geography,
   Calendar,
   Stream,
-  Testbed
+  Testbed,
+  Divisions,
 } from "./scenes";
 
 const AppRouter = () => {
@@ -37,7 +38,7 @@ const AppRouter = () => {
         >
           <Route path="/" element={<Dashboard />} />
           <Route path="/kabinet" element={<Team />} />
-          <Route path="/contacts" element={<Contacts />} />
+          <Route path="/pengurus" element={<Contacts />} />
           <Route path="/admins" element={<Invoices />} />
           <Route path="/form" element={<Form />} />
           <Route path="/calendar" element={<Calendar />} />
@@ -48,6 +49,7 @@ const AppRouter = () => {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/geography" element={<Geography />} />
           <Route path="/testbed" element={<Testbed />} />
+          <Route path="/divisions" element={<Divisions />} />
         </Route>
       </Routes>
     </Router>

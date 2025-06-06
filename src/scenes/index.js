@@ -13,6 +13,7 @@ import Stream from "./stream";
 import FAQ from "./faq";
 import Geography from "./geography";
 import Testbed from "./testbed";
+import Divisions from "./divisions";
 
 export {
   Navbar,
@@ -29,5 +30,6 @@ export {
   Stream,
   FAQ,
   Geography,
-  Testbed
+  Testbed,
+  Divisions
 };

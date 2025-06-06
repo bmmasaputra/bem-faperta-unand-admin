@@ -499,7 +499,7 @@ const Contacts = () => {
         alignItems="center"
         mb={0}
       >
-        <Header title="PENGURUS" subtitle="List of Pengurus" />
+        <Header title="Pengurus" subtitle="List of Pengurus" />
         {!showForm && (
           <Button
             variant="contained"

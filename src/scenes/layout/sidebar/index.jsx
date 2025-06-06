@@ -161,7 +161,13 @@ const SideBar = () => {
           />
           <Item
             title="Manage Pengurus"
-            path="/contacts"
+            path="/pengurus"
+            colors={colors}
+            icon={<PeopleAltOutlined />}
+          />
+          <Item
+            title="Manage Divisi"
+            path="/divisions"
             colors={colors}
             icon={<PeopleAltOutlined />}
           />
