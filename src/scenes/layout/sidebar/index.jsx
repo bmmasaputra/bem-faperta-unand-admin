@@ -17,6 +17,7 @@ import {
   ReceiptOutlined,
   TimelineOutlined,
   WavesOutlined,
+  HowToVoteOutlined,
 } from "@mui/icons-material";
 import avatar from "../../../assets/images/avatar.png";
 import logo from "../../../assets/images/logo.png";
@@ -181,15 +182,15 @@ const SideBar = () => {
             title="Manage UKM"
             path="/ukm"
             colors={colors}
-            icon={<PeopleAltOutlined />}  
-          />  
+            icon={<PeopleAltOutlined />}
+          />
         </Menu>
         <Typography
           variant="h6"
           color={colors.gray[300]}
           sx={{ m: "15px 0 5px 20px" }}
         >
-          {!collapsed ? "Pages" : " "}
+          {!collapsed ? "Content" : " "}
         </Typography>
         <Menu
           menuItemStyles={{
@@ -226,7 +227,7 @@ const SideBar = () => {
           color={colors.gray[300]}
           sx={{ m: "15px 0 5px 20px" }}
         >
-          {!collapsed ? "Charts" : " "}
+          {!collapsed ? "Form" : " "}
         </Typography>
         <Menu
           menuItemStyles={{
@@ -240,6 +241,12 @@ const SideBar = () => {
           }}
         >
           <Item
+            title="Aspiration Form"
+            path="/aspiration"
+            colors={colors}
+            icon={<HowToVoteOutlined />}
+          />
+          {/* <Item
             title="Bar Chart"
             path="/bar"
             colors={colors}
@@ -268,7 +275,7 @@ const SideBar = () => {
             path="/stream"
             colors={colors}
             icon={<WavesOutlined />}
-          />
+          /> */}
         </Menu>
       </Box>
     </Sidebar>

@@ -18,7 +18,8 @@ import {
   Stream,
   Testbed,
   Divisions,
-  UKM
+  UKM,
+  Aspiration
 } from "./scenes";
 
 const AppRouter = () => {
@@ -52,6 +53,7 @@ const AppRouter = () => {
           <Route path="/testbed" element={<Testbed />} />
           <Route path="/divisions" element={<Divisions />} />
           <Route path="/ukm" element={<UKM />} />
+          <Route path="/aspiration" element={<Aspiration />} />
         </Route>
       </Routes>
     </Router>

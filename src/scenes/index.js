@@ -15,6 +15,7 @@ import Geography from "./geography";
 import Testbed from "./testbed";
 import Divisions from "./divisions";
 import UKM from "./ukm";
+import Aspiration from "./aspiration";
 
 export {
   Navbar,
@@ -33,5 +34,6 @@ export {
   Geography,
   Testbed,
   Divisions,
-  UKM
+  UKM,
+  Aspiration,
 };
