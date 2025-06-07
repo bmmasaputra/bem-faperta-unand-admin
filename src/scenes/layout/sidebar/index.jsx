@@ -177,6 +177,12 @@ const SideBar = () => {
             colors={colors}
             icon={<ReceiptOutlined />}
           />
+          <Item
+            title="Manage UKM"
+            path="/ukm"
+            colors={colors}
+            icon={<PeopleAltOutlined />}  
+          />  
         </Menu>
         <Typography
           variant="h6"
