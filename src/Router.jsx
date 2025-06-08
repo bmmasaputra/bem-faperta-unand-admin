@@ -19,7 +19,8 @@ import {
   Testbed,
   Divisions,
   UKM,
-  Aspiration
+  Aspiration,
+  Article,
 } from "./scenes";
 
 const AppRouter = () => {
@@ -54,6 +55,7 @@ const AppRouter = () => {
           <Route path="/divisions" element={<Divisions />} />
           <Route path="/ukm" element={<UKM />} />
           <Route path="/aspiration" element={<Aspiration />} />
+          <Route path="/article" element={<Article />} />
         </Route>
       </Routes>
     </Router>

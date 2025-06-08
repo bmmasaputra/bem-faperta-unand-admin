@@ -18,6 +18,7 @@ import {
   TimelineOutlined,
   WavesOutlined,
   HowToVoteOutlined,
+  ArticleOutlined
 } from "@mui/icons-material";
 import avatar from "../../../assets/images/avatar.png";
 import logo from "../../../assets/images/logo.png";
@@ -203,6 +204,12 @@ const SideBar = () => {
             },
           }}
         >
+          <Item
+            title="Articles"
+            path="/article"
+            colors={colors}
+            icon={<ArticleOutlined />}
+          />
           <Item
             title="Profile Form"
             path="/form"

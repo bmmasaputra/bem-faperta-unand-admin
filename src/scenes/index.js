@@ -16,6 +16,7 @@ import Testbed from "./testbed";
 import Divisions from "./divisions";
 import UKM from "./ukm";
 import Aspiration from "./aspiration";
+import Article from "./article";
 
 export {
   Navbar,
@@ -36,4 +37,5 @@ export {
   Divisions,
   UKM,
   Aspiration,
+  Article
 };

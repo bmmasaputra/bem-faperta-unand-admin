@@ -22,6 +22,7 @@ const URL = "https://bemfabe.vercel.app/api/v1";
 const Admin = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const currentUsername = localStorage.getItem("admin");
 
   // Admin state
   const [admins, setAdmins] = useState([]);
@@ -36,8 +37,7 @@ const Admin = () => {
 
   // Modal state
   const [openModal, setOpenModal] = useState(false);
-  const [form, setForm] = useState({ id: "", username: "" });
-  const [editAdmin, setEditAdmin] = useState(null);
+  const [form, setForm] = useState({ username: "", password: "" });
 
   // Fetch admins
   const fetchAdmins = async () => {
@@ -67,8 +67,7 @@ const Admin = () => {
   // Reset form when closing modal
   useEffect(() => {
     if (!openModal) {
-      setEditAdmin(null);
-      setForm({ id: "", username: "" });
+      setForm({ username: "", password: "" });
     }
   }, [openModal]);
 
@@ -78,10 +77,8 @@ const Admin = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle edit admin (open modal with data)
-  const handleEditAdmin = (admin) => {
-    setEditAdmin(admin);
-    setForm({ id: admin.id, username: admin.username });
+  // Handle add admin
+  const handleAddAdmin = () => {
     setOpenModal(true);
   };
 
@@ -91,15 +88,15 @@ const Admin = () => {
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${URL}/admin`, {
-        method: "PUT",
+      const res = await fetch(`${URL}/admin/assign`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          id: form.id,
           username: form.username,
+          password: form.password,
         }),
       });
       const data = await res.json();
@@ -122,7 +119,7 @@ const Admin = () => {
     } catch (err) {
       setSnackbar({
         open: true,
-        message: "Network error. Failed to update admin.",
+        message: "Network error. Failed to add admin.",
         severity: "error",
       });
     } finally {
@@ -194,16 +191,6 @@ const Admin = () => {
         <Box display="flex" gap={1}>
           <Button
             variant="contained"
-            color="primary"
-            size="small"
-            startIcon={<EditOutlined />}
-            sx={{ minWidth: 70, fontWeight: 600, textTransform: "none" }}
-            onClick={() => handleEditAdmin(params.row)}
-          >
-            Edit
-          </Button>
-          <Button
-            variant="contained"
             color="error"
             size="small"
             startIcon={
@@ -215,7 +202,10 @@ const Admin = () => {
             }
             sx={{ minWidth: 70, fontWeight: 600, textTransform: "none" }}
             onClick={() => handleRevokeAdmin(params.row.id)}
-            disabled={deletingId === params.row.id}
+            disabled={
+              deletingId === params.row.id ||
+              params.row.username === currentUsername // Disable if this is the logged-in admin
+            }
           >
             {deletingId === params.row.id ? "Revoking..." : "Revoke"}
           </Button>
@@ -235,6 +225,19 @@ const Admin = () => {
         mb={2}
       >
         <Header title="Admins" subtitle="Managing all admins" />
+        <Button
+          variant="contained"
+          color="secondary"
+          sx={{
+            bgcolor: colors.blueAccent[700],
+            color: "#fff",
+            fontWeight: 600,
+            ":hover": { bgcolor: colors.blueAccent[800] },
+          }}
+          onClick={handleAddAdmin}
+        >
+          Add Admin
+        </Button>
       </Box>
 
       <Box
@@ -282,6 +285,22 @@ const Admin = () => {
               name="username"
               label="Admin Username"
               value={form.username}
+              onChange={handleFormChange}
+              required
+              fullWidth
+              sx={{
+                mt: 1,
+                input: {
+                  background: colors.primary[600],
+                  color: colors.gray[100],
+                },
+                label: { color: colors.gray[200] },
+              }}
+            />
+            <TextField
+              name="password"
+              label="Admin Password"
+              value={form.password}
               onChange={handleFormChange}
               required
               fullWidth
