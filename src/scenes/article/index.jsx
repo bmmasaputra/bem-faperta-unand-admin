@@ -17,12 +17,14 @@ import {
 } from "@mui/icons-material";
 import MuiAlert from "@mui/material/Alert";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const URL = "https://bemfabe.vercel.app/api/v1";
 
 const Article = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const navigate = useNavigate();
 
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,12 +59,29 @@ const Article = () => {
   }, []);
 
   const handleEdit = (row) => {
-    // Implement your edit logic here
-    setSnackbar({
-      open: true,
-      message: `Edit article "${row.title}" (implement logic)`,
-      severity: "info",
-    });
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setSnackbar({
+        open: true,
+        message: "You must be logged in to edit articles.",
+        severity: "error",
+      });
+      return;
+    }
+    navigate(`/editor/${row.id}`);
+  };
+
+  const handleAdd = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setSnackbar({
+        open: true,
+        message: "You must be logged in to add articles.",
+        severity: "error",
+      });
+      return;
+    }
+    navigate(`/editor/new`);
   };
 
   const handleDelete = async (id) => {
@@ -71,7 +90,7 @@ const Article = () => {
     setDeletingId(id);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${URL}/article`, {
+      const res = await fetch(`${URL}/article/remove`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -170,7 +189,6 @@ const Article = () => {
           >
             {deletingId === params.row.id ? "Deleting..." : "Delete"}
           </Button>
-    
         </Box>
       ),
       sortable: false,
@@ -178,9 +196,30 @@ const Article = () => {
     },
   ];
 
-  return (
+    return(
     <Box m="20px">
-      <Header title="Articles" subtitle="List of Articles" />
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
+        <Header title="Articles" subtitle="List of Articles" />
+        <Button
+          variant="contained"
+          color="secondary"
+          startIcon={<AddCircleOutline />}
+          sx={{
+            bgcolor: colors.blueAccent[700],
+            color: "#fff",
+            fontWeight: 600,
+            ":hover": { bgcolor: colors.blueAccent[800] },
+          }}
+          onClick={handleAdd}
+        >
+          Add Article
+        </Button>
+      </Box>
       <Box
         mt={2}
         height="75vh"

@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import App from "./App";
+import EditorLayout from "./Editor";
 import Login from "./pages/Login";
 import ProtectedRoute from "./ProtectedRoute";
 import {
@@ -21,6 +22,7 @@ import {
   UKM,
   Aspiration,
   Article,
+  ArticleEditor,
 } from "./scenes";
 
 const AppRouter = () => {
@@ -29,6 +31,8 @@ const AppRouter = () => {
       <Routes>
         {/* PUBLIC ROUTE */}
         <Route path="/login" element={<Login />} />
+
+        {/* Editor Route */}
 
         {/* PROTECTED ROUTE */}
         <Route
@@ -40,6 +44,7 @@ const AppRouter = () => {
           }
         >
           <Route path="/" element={<Dashboard />} />
+          <Route path="/editor/:id" element={<ArticleEditor />} />
           <Route path="/kabinet" element={<Team />} />
           <Route path="/pengurus" element={<Contacts />} />
           <Route path="/admins" element={<Invoices />} />

@@ -17,6 +17,7 @@ import Divisions from "./divisions";
 import UKM from "./ukm";
 import Aspiration from "./aspiration";
 import Article from "./article";
+import ArticleEditor from "./article/editor";
 
 export {
   Navbar,
@@ -37,5 +38,6 @@ export {
   Divisions,
   UKM,
   Aspiration,
-  Article
+  Article,
+  ArticleEditor
 };
