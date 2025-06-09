@@ -18,7 +18,8 @@ import {
   TimelineOutlined,
   WavesOutlined,
   HowToVoteOutlined,
-  ArticleOutlined
+  ArticleOutlined,
+  CollectionsOutlined,
 } from "@mui/icons-material";
 import avatar from "../../../assets/images/avatar.png";
 import logo from "../../../assets/images/logo.png";
@@ -211,12 +212,12 @@ const SideBar = () => {
             icon={<ArticleOutlined />}
           />
           <Item
-            title="Profile Form"
-            path="/form"
+            title="Gallery"
+            path="/gallery"
             colors={colors}
-            icon={<PersonOutlined />}
+            icon={<CollectionsOutlined />}
           />
-          <Item
+          {/* <Item
             title="Calendar"
             path="/calendar"
             colors={colors}
@@ -227,7 +228,7 @@ const SideBar = () => {
             path="/faq"
             colors={colors}
             icon={<HelpOutlineOutlined />}
-          />
+          /> */}
         </Menu>
         <Typography
           variant="h6"

@@ -18,6 +18,7 @@ import UKM from "./ukm";
 import Aspiration from "./aspiration";
 import Article from "./article";
 import ArticleEditor from "./article/editor";
+import Gallery from "./gallery";
 
 export {
   Navbar,
@@ -39,5 +40,6 @@ export {
   UKM,
   Aspiration,
   Article,
-  ArticleEditor
+  ArticleEditor,
+  Gallery,
 };

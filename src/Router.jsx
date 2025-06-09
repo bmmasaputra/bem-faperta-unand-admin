@@ -23,6 +23,7 @@ import {
   Aspiration,
   Article,
   ArticleEditor,
+  Gallery,
 } from "./scenes";
 
 const AppRouter = () => {
@@ -61,6 +62,7 @@ const AppRouter = () => {
           <Route path="/ukm" element={<UKM />} />
           <Route path="/aspiration" element={<Aspiration />} />
           <Route path="/article" element={<Article />} />
+          <Route path="/gallery" element={<Gallery />} />
         </Route>
       </Routes>
     </Router>

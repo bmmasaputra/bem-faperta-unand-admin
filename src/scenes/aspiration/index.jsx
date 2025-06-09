@@ -95,13 +95,19 @@ const Aspiration = () => {
       <Box mt={2} display="flex" flexDirection="column" gap={2}>
         {loading ? (
           <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight={200}
-          >
-            <CircularProgress />
-          </Box>
+                  m={3}
+                  display="flex"
+                  flexDirection="column"
+                  justifyContent="center"
+                  alignItems="center"
+                  height="50dvh"
+                  width={"calc(100% - 40px)"}
+                >
+                  <CircularProgress size={48} thickness={4} color="inherit" />
+                  <Typography mt={2} color="text.secondary">
+                    Loading aspiration...
+                  </Typography>
+                </Box>
         ) : aspirations.length === 0 ? (
           <Typography color="text.secondary">No aspirations found.</Typography>
         ) : (
